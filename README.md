@@ -1,55 +1,19 @@
-# Combat Arena Web
+# Combat Arena Web — Fixed Build
 
-A GitHub Pages-ready HTML5 canvas survival shooter built with plain HTML, CSS, and JavaScript.
-
-> Note: This is an original browser implementation. It does not include decompiled code, proprietary assets, or copied content from the uploaded JAR file.
-
-## Files
-
-```text
-combat_web_game/
-├── index.html
-├── css/
-│   └── style.css
-├── js/
-│   └── game.js
-├── assets/
-└── README.md
-```
-
-## How to run locally
-
-Open `index.html` directly in a browser, or use a local server:
-
-```bash
-python3 -m http.server 8000
-```
-
-Then visit:
-
-```text
-http://localhost:8000
-```
-
-## Controls
-
-- Move: `WASD` or `Arrow Keys`
-- Aim: Mouse
-- Shoot: Click / Tap Fire
-- Reload: `R`
-- Pause: `P` or `Esc`
+This version is a **single-file HTML game**. CSS and JavaScript are inside `index.html`, so it will not break if folders are missing or if you open it on mobile.
 
 ## How to host on GitHub Pages
 
 1. Create a new GitHub repository.
-2. Upload all files from this folder.
-3. Go to **Settings → Pages**.
-4. Under **Build and deployment**, choose **Deploy from a branch**.
-5. Select the `main` branch and `/root` folder.
-6. Save and wait for GitHub to publish the site.
+2. Upload `index.html` to the repository root.
+3. Go to **Settings > Pages**.
+4. Select **Deploy from branch**.
+5. Choose `main` branch and `/root`.
+6. Open the GitHub Pages link after deployment.
 
-## Customization ideas
+## Controls
 
-- Replace canvas-drawn objects with your own original sprites.
-- Add new enemy types, maps, missions, and weapons in `js/game.js`.
-- Adjust colors and layout in `css/style.css`.
+- Desktop: WASD / Arrow keys to move, mouse to aim, click to shoot, R to reload.
+- Mobile: use the joystick and Fire / Reload buttons.
+
+This is an original browser game implementation. No proprietary JAR code or assets are included.
