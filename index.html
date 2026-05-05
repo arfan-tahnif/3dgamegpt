@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Combat Arena Web</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="gameCanvas" aria-label="Combat Arena Web Game"></canvas>
+
+    <div id="hud" class="hud hidden">
+      <div class="hud-card">
+        <span>Health</span>
+        <div class="bar"><i id="healthBar"></i></div>
+      </div>
+      <div class="hud-card">
+        <span>Ammo</span>
+        <strong id="ammoText">30 / 90</strong>
+      </div>
+      <div class="hud-card">
+        <span>Wave</span>
+        <strong id="waveText">1</strong>
+      </div>
+      <div class="hud-card">
+        <span>Score</span>
+        <strong id="scoreText">0</strong>
+      </div>
+    </div>
+
+    <section id="menu" class="panel">
+      <div class="logo-mark">CA</div>
+      <h1>Combat Arena Web</h1>
+      <p class="subtitle">A lightweight HTML5 canvas survival shooter built with plain HTML, CSS, and JavaScript.</p>
+      <div class="menu-grid">
+        <button id="startBtn">Start Game</button>
+        <button id="howBtn" class="secondary">How to Play</button>
+      </div>
+      <p class="note">Keyboard: WASD / Arrow keys · Mouse: aim and shoot · R: reload · P/Esc: pause</p>
+      <p class="copyright-note">Original browser implementation. No proprietary JAR code or assets included.</p>
+    </section>
+
+    <section id="howPanel" class="panel small hidden">
+      <h2>How to Play</h2>
+      <ul>
+        <li>Move with <b>WASD</b> or <b>Arrow Keys</b>.</li>
+        <li>Aim with your mouse or touch direction.</li>
+        <li>Click/tap to shoot. Press <b>R</b> to reload.</li>
+        <li>Survive waves, collect medkits and ammo packs.</li>
+      </ul>
+      <button id="backBtn" class="secondary">Back</button>
+    </section>
+
+    <section id="pausePanel" class="panel small hidden">
+      <h2>Paused</h2>
+      <p>Take cover. Resume when ready.</p>
+      <button id="resumeBtn">Resume</button>
+      <button id="restartBtnPause" class="secondary">Restart</button>
+    </section>
+
+    <section id="gameOverPanel" class="panel small hidden">
+      <h2>Mission Failed</h2>
+      <p id="finalStats">Score: 0</p>
+      <button id="restartBtn">Play Again</button>
+    </section>
+
+    <div id="mobileControls" class="mobile-controls hidden">
+      <div class="stick" id="moveStick"><span></span></div>
+      <div class="touch-actions">
+        <button id="reloadTouch">Reload</button>
+        <button id="shootTouch">Fire</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/game.js"></script>
+</body>
+</html>
