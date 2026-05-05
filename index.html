@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Combat Arena Web - Fixed Single File</title>
+  <title>Combat Arena Web - Mobile Joystick Aim</title>
   <style>
 :root {
   --bg-1: #0b1020;
@@ -424,15 +424,16 @@ ul {
         <button id="howBtn" class="secondary">How to Play</button>
       </div>
       <p class="note">Keyboard: WASD / Arrow keys · Mouse: aim and shoot · R: reload · P/Esc: pause</p>
-      <p class="copyright-note">Mobile v3 build: joystick is always visible during play; left-screen drag also moves player.</p>
+      <p class="copyright-note">Mobile v4 build: joystick direction controls movement, gun rotation, and bullet direction.</p>
     </section>
 
     <section id="howPanel" class="panel small hidden">
       <h2>How to Play</h2>
       <ul>
         <li>Move with <b>WASD</b> or <b>Arrow Keys</b>.</li>
-        <li>Mobile: use the joystick or arrow buttons to move.</li>
-        <li>Aim with your mouse or touch direction.</li>
+        <li>Mobile: joystick direction moves the player and rotates the gun.</li>
+        <li>Fire button shoots in the joystick direction.</li>
+        <li>Desktop: aim with your mouse.</li>
         <li>Click/tap to shoot. Press <b>R</b> to reload.</li>
         <li>Survive waves, collect medkits and ammo packs.</li>
       </ul>
@@ -507,7 +508,9 @@ ul {
   const keys = new Set();
   const pointer = { x: 0, y: 0, down: false };
   const mobileMove = { x: 0, y: 0, active: false };
+  const mobileAim = { x: 1, y: 0, active: false, angle: 0 };
   const screenMove = { id: null, startX: 0, startY: 0 };
+  let stickPointerId = null;
   const touchKeys = { up: false, down: false, left: false, right: false };
   const world = { width: 2200, height: 1500 };
   const camera = { x: 0, y: 0 };
@@ -611,6 +614,7 @@ ul {
       r: 18,
       speed: 270,
       angle: 0,
+      lastMoveAngle: 0,
       health: 100,
       maxHealth: 100,
       ammo: 30,
@@ -702,6 +706,7 @@ ul {
     p.ammo -= 1;
     game.nextShot = now + p.fireRate;
     const spread = rand(-0.045, 0.045);
+    // Bullet direction comes from player.angle. On mobile this angle is controlled by the joystick/D-pad.
     const angle = p.angle + spread;
     const speed = 760;
     const muzzle = 24;
@@ -781,14 +786,29 @@ ul {
 
     let mx = 0;
     let my = 0;
-    if (keys.has('KeyW') || keys.has('ArrowUp') || touchKeys.up) my -= 1;
-    if (keys.has('KeyS') || keys.has('ArrowDown') || touchKeys.down) my += 1;
-    if (keys.has('KeyA') || keys.has('ArrowLeft') || touchKeys.left) mx -= 1;
-    if (keys.has('KeyD') || keys.has('ArrowRight') || touchKeys.right) mx += 1;
+    let buttonX = 0;
+    let buttonY = 0;
+
+    if (keys.has('KeyW') || keys.has('ArrowUp')) my -= 1;
+    if (keys.has('KeyS') || keys.has('ArrowDown')) my += 1;
+    if (keys.has('KeyA') || keys.has('ArrowLeft')) mx -= 1;
+    if (keys.has('KeyD') || keys.has('ArrowRight')) mx += 1;
+
+    if (touchKeys.up) buttonY -= 1;
+    if (touchKeys.down) buttonY += 1;
+    if (touchKeys.left) buttonX -= 1;
+    if (touchKeys.right) buttonX += 1;
+
+    if (buttonX || buttonY) {
+      mx += buttonX;
+      my += buttonY;
+    }
+
     if (mobileMove.active) {
       mx += mobileMove.x;
       my += mobileMove.y;
     }
+
     const ml = Math.hypot(mx, my) || 1;
     p.x += (mx / ml) * p.speed * dt;
     p.y += (my / ml) * p.speed * dt;
@@ -796,10 +816,27 @@ ul {
     p.y = clamp(p.y, p.r, world.height - p.r);
     circleObstacleResolve(p);
 
-    const worldPointer = { x: pointer.x + camera.x, y: pointer.y + camera.y };
-    if (mobileMove.active && Math.abs(mobileMove.x) + Math.abs(mobileMove.y) > 0.2) {
+    // Mobile rule: the gun and bullets follow the same direction as the joystick / D-pad.
+    // Desktop rule: aim follows mouse/touch pointer when no movement joystick is being used.
+    const joyLen = mobileMove.active ? Math.hypot(mobileMove.x, mobileMove.y) : 0;
+    const btnLen = Math.hypot(buttonX, buttonY);
+    if (joyLen > 0.14) {
       p.angle = Math.atan2(mobileMove.y, mobileMove.x);
+      p.lastMoveAngle = p.angle;
+      mobileAim.x = Math.cos(p.angle);
+      mobileAim.y = Math.sin(p.angle);
+      mobileAim.angle = p.angle;
+      mobileAim.active = true;
+    } else if (btnLen > 0) {
+      p.angle = Math.atan2(buttonY, buttonX);
+      p.lastMoveAngle = p.angle;
+      mobileAim.x = Math.cos(p.angle);
+      mobileAim.y = Math.sin(p.angle);
+      mobileAim.angle = p.angle;
+      mobileAim.active = true;
     } else {
+      mobileAim.active = false;
+      const worldPointer = { x: pointer.x + camera.x, y: pointer.y + camera.y };
       p.angle = Math.atan2(worldPointer.y - p.y, worldPointer.x - p.x);
     }
 
@@ -986,10 +1023,16 @@ ul {
 
     ctx.shadowBlur = 0;
     ctx.fillStyle = '#dbeafe';
-    roundRect(2, -5, 30, 10, 4);
+    roundRect(2, -5, 38, 10, 4);
     ctx.fill();
     ctx.fillStyle = '#0f172a';
-    roundRect(13, -3, 20, 6, 3);
+    roundRect(18, -3, 24, 6, 3);
+    ctx.fill();
+
+    // Small front sight makes it clear that the gun rotates with the joystick.
+    ctx.fillStyle = '#fef08a';
+    ctx.beginPath();
+    ctx.arc(42, 0, 3, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
@@ -1148,9 +1191,8 @@ ul {
 
   function stickPointer(event) {
     const rect = els.moveStick.getBoundingClientRect();
-    const touch = event.touches ? event.touches[0] : event;
-    const x = touch.clientX - rect.left - rect.width / 2;
-    const y = touch.clientY - rect.top - rect.height / 2;
+    const x = event.clientX - rect.left - rect.width / 2;
+    const y = event.clientY - rect.top - rect.height / 2;
     const len = Math.hypot(x, y);
     const max = rect.width / 2 - 23;
     const nx = len > 0 ? x / len : 0;
@@ -1165,6 +1207,7 @@ ul {
     mobileMove.x = 0;
     mobileMove.y = 0;
     mobileMove.active = false;
+    mobileAim.active = false;
     els.moveStick.querySelector('span').style.transform = 'translate(0, 0)';
   }
 
@@ -1301,14 +1344,30 @@ ul {
   els.shootTouch.addEventListener('touchend', stopFire, { passive: false });
   els.shootTouch.addEventListener('touchcancel', stopFire, { passive: false });
 
-  els.moveStick.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); stickPointer(e); try { els.moveStick.setPointerCapture(e.pointerId); } catch (_) {} });
-  els.moveStick.addEventListener('pointermove', (e) => { if (mobileMove.active) { e.preventDefault(); e.stopPropagation(); stickPointer(e); } });
-  els.moveStick.addEventListener('pointerup', (e) => { e.preventDefault(); e.stopPropagation(); resetStick(); });
-  els.moveStick.addEventListener('pointercancel', (e) => { e.preventDefault(); e.stopPropagation(); resetStick(); });
-  els.moveStick.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); stickPointer(e); }, { passive: false });
-  els.moveStick.addEventListener('touchmove', (e) => { e.preventDefault(); e.stopPropagation(); stickPointer(e); }, { passive: false });
-  els.moveStick.addEventListener('touchend', (e) => { e.preventDefault(); e.stopPropagation(); resetStick(); }, { passive: false });
-  els.moveStick.addEventListener('touchcancel', (e) => { e.preventDefault(); e.stopPropagation(); resetStick(); }, { passive: false });
+  els.moveStick.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    stickPointerId = e.pointerId;
+    stickPointer(e);
+    try { els.moveStick.setPointerCapture(e.pointerId); } catch (_) {}
+  });
+  els.moveStick.addEventListener('pointermove', (e) => {
+    if (stickPointerId === e.pointerId) {
+      e.preventDefault();
+      e.stopPropagation();
+      stickPointer(e);
+    }
+  });
+  const endStick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (stickPointerId === e.pointerId) {
+      stickPointerId = null;
+      resetStick();
+    }
+  };
+  els.moveStick.addEventListener('pointerup', endStick);
+  els.moveStick.addEventListener('pointercancel', endStick);
 
   bindMoveButton(els.moveUp, 'up');
   bindMoveButton(els.moveDown, 'down');

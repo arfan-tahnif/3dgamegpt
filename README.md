@@ -33,3 +33,9 @@ This is a GitHub Pages-ready HTML5 canvas game.
 6. Open your GitHub Pages link.
 
 This is an original browser game implementation. No proprietary JAR code or assets are included.
+
+
+## Mobile v4 update
+- Joystick direction now controls movement, gun rotation, and bullet firing direction.
+- Fire button shoots toward the joystick direction.
+- D-pad direction also rotates the gun.
