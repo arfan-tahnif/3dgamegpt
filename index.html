@@ -68,13 +68,20 @@ button.secondary {
   position: relative;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 }
+
 
 #gameCanvas {
   display: block;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   background: transparent;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .panel {
@@ -215,15 +222,16 @@ ul {
 }
 
 .mobile-controls {
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  bottom: 16px;
-  z-index: 6;
-  display: none;
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(78px + env(safe-area-inset-bottom));
+  z-index: 999999;
+  display: flex;
   align-items: end;
   justify-content: space-between;
   pointer-events: none;
+  transform: translateZ(0);
 }
 
 .stick,
@@ -235,10 +243,11 @@ ul {
   width: 118px;
   height: 118px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(15, 23, 42, 0.62);
+  border: 2px solid rgba(125, 211, 252, 0.55);
   backdrop-filter: blur(10px);
   position: relative;
+  box-shadow: 0 12px 35px rgba(0,0,0,.35), inset 0 0 22px rgba(56,189,248,.14);
 }
 
 .stick span {
@@ -300,19 +309,20 @@ ul {
 }
 
 .touch-actions button {
-  width: 96px;
-  height: 54px;
+  width: 104px;
+  height: 58px;
   padding: 0;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
+  box-shadow: 0 10px 26px rgba(0,0,0,.35);
 }
 
 @media (max-width: 480px) {
   .mobile-controls {
     left: 8px;
     right: 8px;
-    bottom: 8px;
+    bottom: calc(74px + env(safe-area-inset-bottom));
   }
 
   .stick {
@@ -414,7 +424,7 @@ ul {
         <button id="howBtn" class="secondary">How to Play</button>
       </div>
       <p class="note">Keyboard: WASD / Arrow keys · Mouse: aim and shoot · R: reload · P/Esc: pause</p>
-      <p class="copyright-note">Fixed single-file build. Upload this index.html directly to GitHub Pages.</p>
+      <p class="copyright-note">Mobile v3 build: joystick is always visible during play; left-screen drag also moves player.</p>
     </section>
 
     <section id="howPanel" class="panel small hidden">
@@ -497,6 +507,7 @@ ul {
   const keys = new Set();
   const pointer = { x: 0, y: 0, down: false };
   const mobileMove = { x: 0, y: 0, active: false };
+  const screenMove = { id: null, startX: 0, startY: 0 };
   const touchKeys = { up: false, down: false, left: false, right: false };
   const world = { width: 2200, height: 1500 };
   const camera = { x: 0, y: 0 };
@@ -1181,7 +1192,7 @@ ul {
       touchKeys[keyName] = false;
       button.classList.remove('active');
     };
-    button.addEventListener('pointerdown', start);
+    button.addEventListener('pointerdown', (e) => { try { button.setPointerCapture(e.pointerId); } catch (_) {} start(e); });
     button.addEventListener('pointerup', stop);
     button.addEventListener('pointercancel', stop);
     button.addEventListener('pointerleave', stop);
@@ -1198,18 +1209,68 @@ ul {
   });
   window.addEventListener('keyup', (e) => keys.delete(e.code));
 
+  function updateScreenMove(e) {
+    const dx = e.clientX - screenMove.startX;
+    const dy = e.clientY - screenMove.startY;
+    const max = 72;
+    mobileMove.x = clamp(dx / max, -1, 1);
+    mobileMove.y = clamp(dy / max, -1, 1);
+    mobileMove.active = true;
+  }
+
   canvas.addEventListener('pointermove', (e) => {
+    if (screenMove.id === e.pointerId) {
+      e.preventDefault();
+      updateScreenMove(e);
+      return;
+    }
     pointer.x = e.clientX;
     pointer.y = e.clientY;
-  });
+  }, { passive: false });
+
   canvas.addEventListener('pointerdown', (e) => {
     initAudio();
     pointer.x = e.clientX;
     pointer.y = e.clientY;
+
+    // Mobile fallback: drag anywhere on the LEFT side of the screen to move.
+    // This works even if the visible joystick is missed by the finger.
+    if (e.pointerType === 'touch' && state === 'playing' && e.clientX < window.innerWidth * 0.48) {
+      e.preventDefault();
+      screenMove.id = e.pointerId;
+      screenMove.startX = e.clientX;
+      screenMove.startY = e.clientY;
+      mobileMove.active = true;
+      mobileMove.x = 0;
+      mobileMove.y = 0;
+      try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+      return;
+    }
+
+    e.preventDefault();
     pointer.down = true;
     shoot();
+  }, { passive: false });
+
+  window.addEventListener('pointerup', (e) => {
+    if (screenMove.id === e.pointerId) {
+      screenMove.id = null;
+      resetStick();
+    }
+    pointer.down = false;
   });
-  window.addEventListener('pointerup', () => { pointer.down = false; });
+  window.addEventListener('pointercancel', (e) => {
+    if (screenMove.id === e.pointerId) {
+      screenMove.id = null;
+      resetStick();
+    }
+    pointer.down = false;
+  });
+
+  // Stop mobile browser scrolling/zoom gestures from stealing touch input.
+  document.addEventListener('touchmove', (e) => {
+    if (state === 'playing') e.preventDefault();
+  }, { passive: false });
   window.addEventListener('blur', () => {
     pointer.down = false;
     keys.clear();
