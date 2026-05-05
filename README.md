@@ -1,19 +1,35 @@
-# Combat Arena Web — Fixed Build
+# Combat Arena Web — Mobile Fixed Build
 
-This version is a **single-file HTML game**. CSS and JavaScript are inside `index.html`, so it will not break if folders are missing or if you open it on mobile.
+This is a GitHub Pages-ready HTML5 canvas game.
 
-## How to host on GitHub Pages
+## Files
 
-1. Create a new GitHub repository.
-2. Upload `index.html` to the repository root.
-3. Go to **Settings > Pages**.
-4. Select **Deploy from branch**.
-5. Choose `main` branch and `/root`.
-6. Open the GitHub Pages link after deployment.
+- `index.html` — single-file game with HTML, CSS, and JavaScript included
+- `.nojekyll` — GitHub Pages helper file
 
 ## Controls
 
-- Desktop: WASD / Arrow keys to move, mouse to aim, click to shoot, R to reload.
-- Mobile: use the joystick and Fire / Reload buttons.
+### Laptop / Desktop
+
+- Move: `WASD` or Arrow keys
+- Aim: Mouse
+- Shoot: Mouse click
+- Reload: `R`
+- Pause: `P` or `Esc`
+
+### Mobile
+
+- Move: left-side joystick or arrow buttons
+- Shoot: `Fire` button
+- Reload: `Reload` button
+
+## GitHub Pages Hosting
+
+1. Create a GitHub repository.
+2. Upload `index.html` and `.nojekyll` to the repository root.
+3. Go to **Settings > Pages**.
+4. Choose **Deploy from branch**.
+5. Select your branch and `/root`.
+6. Open your GitHub Pages link.
 
 This is an original browser game implementation. No proprietary JAR code or assets are included.

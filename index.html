@@ -252,7 +252,49 @@ ul {
   box-shadow: 0 10px 26px rgba(14, 165, 233, 0.34);
 }
 
+.mobile-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dpad {
+  display: grid;
+  grid-template-columns: 48px 48px 48px;
+  grid-template-rows: 48px 48px 48px;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.dpad button {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 14px;
+  font-size: 20px;
+  line-height: 1;
+  color: #eaf6ff;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.dpad button:active,
+.dpad button.active {
+  transform: scale(0.94);
+  background: rgba(56, 189, 248, 0.38);
+}
+
+#moveUp { grid-column: 2; grid-row: 1; }
+#moveLeft { grid-column: 1; grid-row: 2; }
+#moveDown { grid-column: 2; grid-row: 3; }
+#moveRight { grid-column: 3; grid-row: 2; }
+
 .touch-actions {
+
   display: grid;
   gap: 10px;
 }
@@ -261,13 +303,57 @@ ul {
   width: 96px;
   height: 54px;
   padding: 0;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@media (max-width: 480px) {
+  .mobile-controls {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+  }
+
+  .stick {
+    width: 96px;
+    height: 96px;
+  }
+
+  .stick span {
+    width: 38px;
+    height: 38px;
+    left: 29px;
+    top: 29px;
+  }
+
+  .mobile-left {
+    gap: 8px;
+  }
+
+  .dpad {
+    grid-template-columns: 42px 42px 42px;
+    grid-template-rows: 42px 42px 42px;
+    gap: 4px;
+  }
+
+  .dpad button {
+    width: 42px;
+    height: 42px;
+    font-size: 18px;
+  }
+
+  .touch-actions button {
+    width: 82px;
+    height: 50px;
+  }
 }
 
 .hidden {
   display: none !important;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 900px), (pointer: coarse) {
   .menu-grid {
     grid-template-columns: 1fr;
   }
@@ -335,6 +421,7 @@ ul {
       <h2>How to Play</h2>
       <ul>
         <li>Move with <b>WASD</b> or <b>Arrow Keys</b>.</li>
+        <li>Mobile: use the joystick or arrow buttons to move.</li>
         <li>Aim with your mouse or touch direction.</li>
         <li>Click/tap to shoot. Press <b>R</b> to reload.</li>
         <li>Survive waves, collect medkits and ammo packs.</li>
@@ -355,8 +442,16 @@ ul {
       <button id="restartBtn">Play Again</button>
     </section>
 
-    <div id="mobileControls" class="mobile-controls hidden">
-      <div class="stick" id="moveStick"><span></span></div>
+    <div id="mobileControls" class="mobile-controls hidden" aria-label="Mobile controls">
+      <div class="mobile-left">
+        <div class="stick" id="moveStick" aria-label="Move joystick"><span></span></div>
+        <div class="dpad" aria-label="Move buttons">
+          <button id="moveUp" aria-label="Move up">▲</button>
+          <button id="moveLeft" aria-label="Move left">◀</button>
+          <button id="moveRight" aria-label="Move right">▶</button>
+          <button id="moveDown" aria-label="Move down">▼</button>
+        </div>
+      </div>
       <div class="touch-actions">
         <button id="reloadTouch">Reload</button>
         <button id="shootTouch">Fire</button>
@@ -390,6 +485,10 @@ ul {
     restartBtnPause: document.getElementById('restartBtnPause'),
     mobileControls: document.getElementById('mobileControls'),
     moveStick: document.getElementById('moveStick'),
+    moveUp: document.getElementById('moveUp'),
+    moveDown: document.getElementById('moveDown'),
+    moveLeft: document.getElementById('moveLeft'),
+    moveRight: document.getElementById('moveRight'),
     reloadTouch: document.getElementById('reloadTouch'),
     shootTouch: document.getElementById('shootTouch')
   };
@@ -398,6 +497,7 @@ ul {
   const keys = new Set();
   const pointer = { x: 0, y: 0, down: false };
   const mobileMove = { x: 0, y: 0, active: false };
+  const touchKeys = { up: false, down: false, left: false, right: false };
   const world = { width: 2200, height: 1500 };
   const camera = { x: 0, y: 0 };
 
@@ -475,6 +575,7 @@ ul {
     els.howPanel.classList.add('hidden');
     els.pausePanel.classList.add('hidden');
     els.gameOverPanel.classList.add('hidden');
+    els.mobileControls.classList.add('hidden');
   }
 
   function makeObstacles() {
@@ -521,6 +622,7 @@ ul {
     state = 'playing';
     hidePanels();
     els.hud.classList.remove('hidden');
+    els.mobileControls.classList.remove('hidden');
     updateHud();
   }
 
@@ -668,10 +770,10 @@ ul {
 
     let mx = 0;
     let my = 0;
-    if (keys.has('KeyW') || keys.has('ArrowUp')) my -= 1;
-    if (keys.has('KeyS') || keys.has('ArrowDown')) my += 1;
-    if (keys.has('KeyA') || keys.has('ArrowLeft')) mx -= 1;
-    if (keys.has('KeyD') || keys.has('ArrowRight')) mx += 1;
+    if (keys.has('KeyW') || keys.has('ArrowUp') || touchKeys.up) my -= 1;
+    if (keys.has('KeyS') || keys.has('ArrowDown') || touchKeys.down) my += 1;
+    if (keys.has('KeyA') || keys.has('ArrowLeft') || touchKeys.left) mx -= 1;
+    if (keys.has('KeyD') || keys.has('ArrowRight') || touchKeys.right) mx += 1;
     if (mobileMove.active) {
       mx += mobileMove.x;
       my += mobileMove.y;
@@ -798,6 +900,7 @@ ul {
   function endGame() {
     state = 'gameover';
     els.hud.classList.add('hidden');
+    els.mobileControls.classList.add('hidden');
     els.gameOverPanel.classList.remove('hidden');
     game.highScore = Math.max(game.highScore, game.score);
     localStorage.setItem('combatArenaHighScore', String(game.highScore));
@@ -1023,8 +1126,12 @@ ul {
     state = next;
     if (state === 'paused') {
       els.pausePanel.classList.remove('hidden');
+      els.mobileControls.classList.add('hidden');
+      pointer.down = false;
+      resetStick();
     } else {
       els.pausePanel.classList.add('hidden');
+      els.mobileControls.classList.remove('hidden');
     }
   }
 
@@ -1050,6 +1157,39 @@ ul {
     els.moveStick.querySelector('span').style.transform = 'translate(0, 0)';
   }
 
+  function clearTouchMovement() {
+    resetStick();
+    touchKeys.up = false;
+    touchKeys.down = false;
+    touchKeys.left = false;
+    touchKeys.right = false;
+    [els.moveUp, els.moveDown, els.moveLeft, els.moveRight].forEach(btn => btn.classList.remove('active'));
+  }
+
+  function bindMoveButton(button, keyName) {
+    const start = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      touchKeys[keyName] = true;
+      button.classList.add('active');
+    };
+    const stop = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      touchKeys[keyName] = false;
+      button.classList.remove('active');
+    };
+    button.addEventListener('pointerdown', start);
+    button.addEventListener('pointerup', stop);
+    button.addEventListener('pointercancel', stop);
+    button.addEventListener('pointerleave', stop);
+    button.addEventListener('touchstart', start, { passive: false });
+    button.addEventListener('touchend', stop, { passive: false });
+    button.addEventListener('touchcancel', stop, { passive: false });
+  }
+
   window.addEventListener('resize', resize);
   window.addEventListener('keydown', (e) => {
     keys.add(e.code);
@@ -1073,7 +1213,7 @@ ul {
   window.addEventListener('blur', () => {
     pointer.down = false;
     keys.clear();
-    resetStick();
+    clearTouchMovement();
   });
 
   els.startBtn.addEventListener('click', newGame);
@@ -1088,18 +1228,31 @@ ul {
   els.resumeBtn.addEventListener('click', () => togglePause('playing'));
   els.restartBtn.addEventListener('click', newGame);
   els.restartBtnPause.addEventListener('click', newGame);
-  els.reloadTouch.addEventListener('pointerdown', (e) => { e.preventDefault(); reload(); });
-  els.shootTouch.addEventListener('pointerdown', (e) => { e.preventDefault(); pointer.down = true; shoot(); });
-  els.shootTouch.addEventListener('pointerup', (e) => { e.preventDefault(); pointer.down = false; });
-  els.shootTouch.addEventListener('pointercancel', () => { pointer.down = false; });
-  els.moveStick.addEventListener('pointerdown', (e) => { e.preventDefault(); stickPointer(e); els.moveStick.setPointerCapture(e.pointerId); });
-  els.moveStick.addEventListener('pointermove', (e) => { if (mobileMove.active) stickPointer(e); });
-  els.moveStick.addEventListener('pointerup', resetStick);
-  els.moveStick.addEventListener('pointercancel', resetStick);
+  els.reloadTouch.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); reload(); });
+  els.reloadTouch.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); reload(); }, { passive: false });
 
-  if (window.matchMedia('(hover: none)').matches) {
-    els.mobileControls.classList.remove('hidden');
-  }
+  const startFire = (e) => { e.preventDefault(); e.stopPropagation(); pointer.down = true; shoot(); };
+  const stopFire = (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } pointer.down = false; };
+  els.shootTouch.addEventListener('pointerdown', startFire);
+  els.shootTouch.addEventListener('pointerup', stopFire);
+  els.shootTouch.addEventListener('pointercancel', stopFire);
+  els.shootTouch.addEventListener('touchstart', startFire, { passive: false });
+  els.shootTouch.addEventListener('touchend', stopFire, { passive: false });
+  els.shootTouch.addEventListener('touchcancel', stopFire, { passive: false });
+
+  els.moveStick.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); stickPointer(e); try { els.moveStick.setPointerCapture(e.pointerId); } catch (_) {} });
+  els.moveStick.addEventListener('pointermove', (e) => { if (mobileMove.active) { e.preventDefault(); e.stopPropagation(); stickPointer(e); } });
+  els.moveStick.addEventListener('pointerup', (e) => { e.preventDefault(); e.stopPropagation(); resetStick(); });
+  els.moveStick.addEventListener('pointercancel', (e) => { e.preventDefault(); e.stopPropagation(); resetStick(); });
+  els.moveStick.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); stickPointer(e); }, { passive: false });
+  els.moveStick.addEventListener('touchmove', (e) => { e.preventDefault(); e.stopPropagation(); stickPointer(e); }, { passive: false });
+  els.moveStick.addEventListener('touchend', (e) => { e.preventDefault(); e.stopPropagation(); resetStick(); }, { passive: false });
+  els.moveStick.addEventListener('touchcancel', (e) => { e.preventDefault(); e.stopPropagation(); resetStick(); }, { passive: false });
+
+  bindMoveButton(els.moveUp, 'up');
+  bindMoveButton(els.moveDown, 'down');
+  bindMoveButton(els.moveLeft, 'left');
+  bindMoveButton(els.moveRight, 'right');
 
   resize();
   requestAnimationFrame(loop);
