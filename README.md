@@ -1,41 +1,79 @@
-# Combat Arena Web — Mobile Fixed Build
+Combat Arena Web
 
-This is a GitHub Pages-ready HTML5 canvas game.
+A lightweight, browser-based survival shooter built with HTML5, CSS, and JavaScript. This game uses a canvas to create dynamic gameplay, where the player survives waves of enemies, collects power-ups, and reloads ammo.
 
-## Files
+Features
 
-- `index.html` — single-file game with HTML, CSS, and JavaScript included
-- `.nojekyll` — GitHub Pages helper file
+Mobile-friendly controls: Includes an on-screen joystick for mobile users.
 
-## Controls
+Desktop support: Playable with keyboard controls (WASD / Arrow keys) and mouse aim.
 
-### Laptop / Desktop
+Survival mode: Survive through waves of enemies.
 
-- Move: `WASD` or Arrow keys
-- Aim: Mouse
-- Shoot: Mouse click
-- Reload: `R`
-- Pause: `P` or `Esc`
+Gun control: Fire, reload, and aim using easy-to-access buttons.
 
-### Mobile
-
-- Move: left-side joystick or arrow buttons
-- Shoot: `Fire` button
-- Reload: `Reload` button
-
-## GitHub Pages Hosting
-
-1. Create a GitHub repository.
-2. Upload `index.html` and `.nojekyll` to the repository root.
-3. Go to **Settings > Pages**.
-4. Choose **Deploy from branch**.
-5. Select your branch and `/root`.
-6. Open your GitHub Pages link.
-
-This is an original browser game implementation. No proprietary JAR code or assets are included.
+Interactive UI: See health, ammo, wave count, and score in real time.
 
 
-## Mobile v4 update
-- Joystick direction now controls movement, gun rotation, and bullet firing direction.
-- Fire button shoots toward the joystick direction.
-- D-pad direction also rotates the gun.
+How to Play
+
+1. Move with the WASD keys (desktop) or the on-screen joystick (mobile).
+
+
+2. Aim with your mouse or use the joystick to rotate the gun.
+
+
+3. Fire: Click/tap to shoot.
+
+
+4. Reload: Press R (desktop) or use the reload button (mobile).
+
+
+5. Pause: Press P or Esc to pause, and Resume to continue.
+
+
+6. Survive: Kill enemies, collect health packs, and ammo to progress through waves.
+
+
+
+Requirements
+
+A modern web browser (Chrome, Firefox, Safari).
+
+Mobile or desktop device with support for touch events or keyboard input.
+
+
+Setup Instructions
+
+1. Clone or download the repository.
+
+
+2. Upload the index.html to your web hosting platform (like GitHub Pages).
+
+
+3. Access the game by opening the index.html file directly or via the hosted link.
+
+
+
+Deployment to GitHub Pages
+
+1. Create a new repository on GitHub (if you don't already have one).
+
+
+2. Push the files to your GitHub repository.
+
+
+3. Go to the repository's Settings → Pages → Set the source to the main branch.
+
+
+4. Your game should now be live on GitHub Pages.
+
+
+
+Notes
+
+The game is designed to work on both desktop and mobile platforms.
+
+The joystick will rotate the character's gun so it aligns with the direction you're moving or aiming.
+
+Ensure cache is cleared for proper updates, especially when using browser-based game.
